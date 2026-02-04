@@ -48,6 +48,13 @@ function compareDate(a, b) {
   return parseDate(a).getTime() - parseDate(b).getTime();
 }
 
+function generateId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 function isPast(dateStr) {
   return compareDate(dateStr, todayStr()) < 0;
 }
@@ -362,7 +369,7 @@ function syncFormState() {
 
 function submitForm(e) {
   e.preventDefault();
-  const id = el.taskId.value || crypto.randomUUID();
+  const id = el.taskId.value || generateId();
   const title = el.titleInput.value.trim();
   if (!title) return;
 
