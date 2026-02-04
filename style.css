@@ -296,6 +296,7 @@ body {
   color: var(--text);
   font-size: 22px;
   line-height: 1;
+  touch-action: manipulation;
 }
 
 .field {

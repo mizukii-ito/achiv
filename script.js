@@ -508,8 +508,20 @@ el.completedToggle.addEventListener("click", () => {
 
 el.addBtn.addEventListener("click", () => openSheet());
 
-el.sheetBackdrop.addEventListener("click", closeSheet);
-el.sheetClose.addEventListener("click", closeSheet);
+el.sheetBackdrop.addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  closeSheet();
+});
+
+const closeHandler = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  closeSheet();
+};
+
+el.sheetClose.addEventListener("click", closeHandler);
+el.sheetClose.addEventListener("touchend", closeHandler, { passive: false });
 
 el.typeSegment.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
