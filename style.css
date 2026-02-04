@@ -24,6 +24,10 @@ body {
   min-height: 100vh;
 }
 
+body.sheet-open #app {
+  pointer-events: none;
+}
+
 #app {
   padding: calc(14px + env(safe-area-inset-top)) 14px 90px;
 }

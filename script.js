@@ -312,6 +312,7 @@ function render() {
 function openSheet(task = null) {
   el.sheet.classList.remove("hidden");
   el.sheet.setAttribute("aria-hidden", "false");
+  document.body.classList.add("sheet-open");
 
   if (task) {
     el.taskId.value = task.id;
@@ -338,7 +339,10 @@ function openSheet(task = null) {
 function closeSheet() {
   el.sheet.classList.add("hidden");
   el.sheet.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("sheet-open");
 }
+
+window.closeSheet = closeSheet;
 
 function setType(type) {
   [...el.typeSegment.querySelectorAll("button")].forEach((btn) => {
