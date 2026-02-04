@@ -279,19 +279,20 @@ function render() {
   normalizeTasks();
   renderStats();
 
-  const active = state.tasks.filter((t) => !t.completed);
-  const completed = state.tasks.filter((t) => t.completed && t.type === "once" && t.hasCheck);
+  const daily = state.tasks.filter((t) => t.type === "daily");
+  const once = state.tasks.filter((t) => t.type === "once");
+  const completed = once.filter((t) => t.hasCheck && t.completed);
+  const activeOnce = once.filter((t) => !(t.hasCheck && t.completed));
 
-  const overdue = active.filter((t) => t.type === "once" && t.dueDate && isPast(t.dueDate));
-  const priority = active.filter((t) => t.priority && !overdue.includes(t));
-  const todayTasks = active.filter(
-    (t) =>
-      (t.type === "daily") ||
-      (t.type === "once" && t.dueDate && isToday(t.dueDate) && !t.priority)
+  const overdue = activeOnce.filter((t) => t.dueDate && isPast(t.dueDate));
+  const priority = activeOnce.filter((t) => t.priority && !overdue.includes(t));
+  const todayOnce = activeOnce.filter(
+    (t) => t.dueDate && isToday(t.dueDate) && !t.priority
   );
+  const todayTasks = [...daily, ...todayOnce];
 
-  const used = new Set([...overdue, ...priority, ...todayTasks].map((t) => t.id));
-  const others = active.filter((t) => !used.has(t.id));
+  const used = new Set([...overdue, ...priority, ...todayOnce].map((t) => t.id));
+  const others = activeOnce.filter((t) => !used.has(t.id));
 
   renderSection(el.overdue, overdue, { overdue: true });
   renderSection(el.priority, priority);
