@@ -18,6 +18,7 @@ const el = {
   historyList: document.getElementById("historyList"),
   sheet: document.getElementById("sheet"),
   sheetBackdrop: document.getElementById("sheetBackdrop"),
+  sheetClose: document.getElementById("sheetClose"),
   taskForm: document.getElementById("taskForm"),
   taskId: document.getElementById("taskId"),
   titleInput: document.getElementById("titleInput"),
@@ -508,6 +509,7 @@ el.completedToggle.addEventListener("click", () => {
 el.addBtn.addEventListener("click", () => openSheet());
 
 el.sheetBackdrop.addEventListener("click", closeSheet);
+el.sheetClose.addEventListener("click", closeSheet);
 
 el.typeSegment.addEventListener("click", (e) => {
   const btn = e.target.closest("button");

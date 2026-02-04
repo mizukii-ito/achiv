@@ -276,6 +276,28 @@ body {
   z-index: 1;
 }
 
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-title {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+#sheetClose {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #0f131a;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+}
+
 .field {
   display: flex;
   flex-direction: column;
