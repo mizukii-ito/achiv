@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Achiv</title>
+  <meta name="application-name" content="Achiv" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="stats" aria-label="Daily completion">
+      <div id="rate"></div>
+      <div id="streak"></div>
+    </header>
+
+    <main id="lists">
+      <section id="overdue" class="group group-overdue"></section>
+      <section id="priority" class="group group-priority"></section>
+      <section id="today" class="group group-today"></section>
+      <section id="other" class="group group-other"></section>
+
+      <section id="completed" class="group group-completed">
+        <button id="completedToggle" type="button" aria-expanded="false"></button>
+        <div id="completedList" class="collapsed"></div>
+      </section>
+    </main>
+
+    <button id="addBtn" type="button" aria-label="Add task">＋</button>
+  </div>
+
+  <div id="historyView" class="hidden" aria-hidden="true">
+    <div id="historyHeader">
+      <button id="historyBack" type="button" aria-label="Back">←</button>
+      <div id="historyTitle">30日</div>
+    </div>
+    <canvas id="historyChart" width="320" height="180"></canvas>
+    <div id="historyList"></div>
+  </div>
+
+  <div id="sheet" class="hidden" aria-hidden="true">
+    <div id="sheetBackdrop"></div>
+    <form id="taskForm">
+      <input type="hidden" id="taskId" />
+
+      <label class="field">
+        <span>タイトル</span>
+        <input id="titleInput" type="text" maxlength="50" required placeholder="例：朝のストレッチ" />
+      </label>
+
+      <div class="row">
+        <div class="segmented" id="typeSegment">
+          <button type="button" data-value="daily">毎日</button>
+          <button type="button" data-value="once">一度のみ</button>
+        </div>
+      </div>
+
+      <label class="field" id="dueField">
+        <span>期限</span>
+        <input id="dueInput" type="date" />
+      </label>
+
+      <div class="toggles">
+        <label class="toggle" id="checkToggle">
+          <input id="hasCheckInput" type="checkbox" />
+          <span>チェック</span>
+        </label>
+        <label class="toggle" id="priorityToggle">
+          <input id="priorityInput" type="checkbox" />
+          <span>優先表示</span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="saveBtn">保存</button>
+        <button type="button" id="deleteBtn" class="danger hidden">削除</button>
+      </div>
+    </form>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
