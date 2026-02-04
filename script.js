@@ -512,12 +512,6 @@ el.completedToggle.addEventListener("click", () => {
 
 el.addBtn.addEventListener("click", () => openSheet());
 
-el.sheetBackdrop.addEventListener("click", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  closeSheet();
-});
-
 const closeHandler = (e) => {
   e.preventDefault();
   e.stopPropagation();

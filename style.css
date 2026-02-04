@@ -25,7 +25,7 @@ body {
 }
 
 body.sheet-open #app {
-  pointer-events: none;
+  display: none;
 }
 
 #app {
@@ -256,29 +256,29 @@ body.sheet-open #app {
   inset: 0;
   z-index: 30;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: center;
+  background: var(--bg);
+  padding: calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom));
 }
 
 #sheetBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 0;
+  display: none;
 }
 
 #taskForm {
   position: relative;
   width: 100%;
-  max-width: 520px;
+  max-width: 560px;
   background: var(--panel);
-  border-radius: 22px 22px 0 0;
+  border-radius: 18px;
   border: 1px solid var(--line);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   z-index: 1;
+  overflow-y: auto;
 }
 
 .sheet-header {
