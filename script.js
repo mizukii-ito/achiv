@@ -339,7 +339,9 @@ function openSheet(task = null) {
 function closeSheet() {
   el.sheet.classList.add("hidden");
   el.sheet.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("sheet-open");
+  setTimeout(() => {
+    document.body.classList.remove("sheet-open");
+  }, 120);
 }
 
 window.closeSheet = closeSheet;
@@ -520,6 +522,7 @@ const closeHandler = (e) => {
 
 el.sheetClose.addEventListener("click", closeHandler);
 el.sheetClose.addEventListener("touchend", closeHandler, { passive: false });
+el.sheetBackdrop.addEventListener("click", closeHandler);
 
 el.typeSegment.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
