@@ -14,7 +14,7 @@
 </head>
 <body>
   <div id="app">
-    <header id="stats" aria-label="Daily completion">
+    <header id="stats" data-action="history" aria-label="Daily completion">
       <div id="rate"></div>
       <div id="streak"></div>
     </header>
@@ -26,29 +26,32 @@
       <section id="other" class="group group-other"></section>
 
       <section id="completed" class="group group-completed">
-        <button id="completedToggle" type="button" aria-expanded="false"></button>
+        <button id="completedToggle" type="button" data-action="toggle-completed" aria-expanded="false"></button>
         <div id="completedList" class="collapsed"></div>
       </section>
     </main>
 
-    <button id="addBtn" type="button" aria-label="Add task">＋</button>
+    <button id="addBtn" type="button" data-action="add" aria-label="Add task">＋</button>
   </div>
 
-  <div id="historyView" class="hidden" aria-hidden="true">
+  <div id="historyView" class="view hidden" aria-hidden="true">
     <div id="historyHeader">
-      <button id="historyBack" type="button" aria-label="Back">←</button>
+      <button id="historyBack" type="button" data-action="history-back" aria-label="Back">←</button>
       <div id="historyTitle">30日</div>
     </div>
     <canvas id="historyChart" width="320" height="180"></canvas>
     <div id="historyList"></div>
   </div>
 
-  <div id="sheet" class="hidden" aria-hidden="true">
-    <div id="sheetBackdrop"></div>
-    <form id="taskForm">
-      <div class="sheet-header">
-        <div class="sheet-title">タスク</div>
-        <button type="button" id="sheetClose" aria-label="Close" onclick="closeSheet()">×</button>
+  <div id="editor" class="hidden" aria-hidden="true">
+    <div id="editorBackdrop" data-action="close"></div>
+    <form id="editorPanel" autocomplete="off">
+      <div class="editor-grip" data-swipe="handle">
+        <span class="grip-bar"></span>
+      </div>
+      <div class="editor-header">
+        <div class="editor-title">タスク</div>
+        <button type="button" class="icon-btn" data-action="close" aria-label="Close">×</button>
       </div>
       <input type="hidden" id="taskId" />
 
@@ -59,8 +62,8 @@
 
       <div class="row">
         <div class="segmented" id="typeSegment">
-          <button type="button" data-value="daily">毎日</button>
-          <button type="button" data-value="once">一度のみ</button>
+          <button type="button" data-action="type" data-value="daily">毎日</button>
+          <button type="button" data-action="type" data-value="once">一度のみ</button>
         </div>
       </div>
 
@@ -81,8 +84,8 @@
       </div>
 
       <div class="actions">
-        <button type="submit" id="saveBtn">保存</button>
-        <button type="button" id="deleteBtn" class="danger hidden">削除</button>
+        <button type="submit" data-action="save">保存</button>
+        <button type="button" id="deleteBtn" data-action="delete" class="danger hidden">削除</button>
       </div>
     </form>
   </div>

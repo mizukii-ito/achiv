@@ -1,4 +1,5 @@
-const STORAGE_KEY = "todo_pwa_state_v1";
+const STORAGE_KEY = "achiv_state_v2";
+const LEGACY_KEY = "todo_pwa_state_v1";
 
 const el = {
   rate: document.getElementById("rate"),
@@ -16,10 +17,9 @@ const el = {
   historyBack: document.getElementById("historyBack"),
   historyChart: document.getElementById("historyChart"),
   historyList: document.getElementById("historyList"),
-  sheet: document.getElementById("sheet"),
-  sheetBackdrop: document.getElementById("sheetBackdrop"),
-  sheetClose: document.getElementById("sheetClose"),
-  taskForm: document.getElementById("taskForm"),
+  editor: document.getElementById("editor"),
+  editorPanel: document.getElementById("editorPanel"),
+  editorBackdrop: document.getElementById("editorBackdrop"),
   taskId: document.getElementById("taskId"),
   titleInput: document.getElementById("titleInput"),
   typeSegment: document.getElementById("typeSegment"),
@@ -65,6 +65,12 @@ function isToday(dateStr) {
 }
 
 function loadState() {
+  try {
+    localStorage.removeItem(LEGACY_KEY);
+  } catch {
+    // ignore
+  }
+
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
     return {
@@ -76,11 +82,12 @@ function loadState() {
   }
   try {
     const data = JSON.parse(raw);
-    data.tasks = Array.isArray(data.tasks) ? data.tasks : [];
-    data.history = Array.isArray(data.history) ? data.history : [];
-    data.lastDailyDate = data.lastDailyDate || todayStr();
-    data.completedCollapsed = data.completedCollapsed !== false;
-    return data;
+    return {
+      tasks: Array.isArray(data.tasks) ? data.tasks : [],
+      history: Array.isArray(data.history) ? data.history : [],
+      lastDailyDate: data.lastDailyDate || todayStr(),
+      completedCollapsed: data.completedCollapsed !== false,
+    };
   } catch {
     return {
       tasks: [],
@@ -198,18 +205,16 @@ function createTaskElement(task, options = {}) {
   if (options.overdue) item.classList.add("overdue");
   if (task.priority) item.classList.add("goal");
   if (task.completed) item.classList.add("completed");
+  item.dataset.action = "edit";
+  item.dataset.id = task.id;
 
   const left = document.createElement("div");
   if (task.hasCheck) {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = !!task.completed;
-    checkbox.addEventListener("click", (e) => {
-      e.stopPropagation();
-      task.completed = checkbox.checked;
-      saveState();
-      render();
-    });
+    checkbox.dataset.action = "toggle";
+    checkbox.dataset.id = task.id;
     left.appendChild(checkbox);
   } else {
     const dot = document.createElement("div");
@@ -236,10 +241,8 @@ function createTaskElement(task, options = {}) {
     const btn = document.createElement("button");
     btn.textContent = "×";
     btn.className = "badge";
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      deleteTask(task.id);
-    });
+    btn.dataset.action = "delete";
+    btn.dataset.id = task.id;
     right.appendChild(btn);
   }
 
@@ -247,7 +250,6 @@ function createTaskElement(task, options = {}) {
   item.appendChild(center);
   item.appendChild(right);
 
-  item.addEventListener("click", () => openSheet(task));
   return item;
 }
 
@@ -309,12 +311,16 @@ function render() {
   renderCompleted(completed);
 }
 
-function openSheet(task = null) {
-  el.sheet.classList.remove("hidden");
-  el.sheet.setAttribute("aria-hidden", "false");
-  document.body.classList.add("sheet-open");
+function openEditor(taskId = null) {
+  el.editor.classList.remove("hidden");
+  el.editor.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  el.editorPanel.style.transform = "";
+  el.editorPanel.classList.remove("dragging");
 
-  if (task) {
+  if (taskId) {
+    const task = state.tasks.find((t) => t.id === taskId);
+    if (!task) return;
     el.taskId.value = task.id;
     el.titleInput.value = task.title;
     setType(task.type);
@@ -332,19 +338,17 @@ function openSheet(task = null) {
     el.deleteBtn.classList.add("hidden");
   }
 
-  syncFormState();
+  syncEditorState();
   el.titleInput.focus();
 }
 
-function closeSheet() {
-  el.sheet.classList.add("hidden");
-  el.sheet.setAttribute("aria-hidden", "true");
-  setTimeout(() => {
-    document.body.classList.remove("sheet-open");
-  }, 120);
+function closeEditor() {
+  el.editor.classList.add("hidden");
+  el.editor.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+  el.editorPanel.style.transform = "";
+  el.editorPanel.classList.remove("dragging");
 }
-
-window.closeSheet = closeSheet;
 
 function setType(type) {
   [...el.typeSegment.querySelectorAll("button")].forEach((btn) => {
@@ -353,7 +357,7 @@ function setType(type) {
   el.typeSegment.dataset.value = type;
 }
 
-function syncFormState() {
+function syncEditorState() {
   const type = el.typeSegment.dataset.value;
   const isDaily = type === "daily";
   el.dueField.style.display = isDaily ? "none" : "flex";
@@ -371,6 +375,10 @@ function syncFormState() {
   if (el.priorityInput.checked) {
     el.hasCheckInput.checked = false;
     el.hasCheckInput.disabled = true;
+  }
+
+  if (el.hasCheckInput.checked) {
+    el.priorityInput.checked = false;
   }
 }
 
@@ -411,7 +419,7 @@ function submitForm(e) {
   }
 
   saveState();
-  closeSheet();
+  closeEditor();
   render();
 }
 
@@ -506,50 +514,134 @@ function drawChart(rows) {
   });
 }
 
-el.completedToggle.addEventListener("click", () => {
-  state.completedCollapsed = !state.completedCollapsed;
-  saveState();
-  render();
-});
+function handleClick(e) {
+  const actionEl = e.target.closest("[data-action]");
+  if (!actionEl) return;
+  const action = actionEl.dataset.action;
 
-el.addBtn.addEventListener("click", () => openSheet());
+  if (action === "edit") {
+    if (e.target.closest("input") || e.target.closest("button")) return;
+    openEditor(actionEl.dataset.id);
+    return;
+  }
 
-const closeHandler = (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  closeSheet();
+  if (action === "toggle") return;
+
+  switch (action) {
+    case "add":
+      openEditor();
+      break;
+    case "close":
+      closeEditor();
+      break;
+    case "delete":
+      if (actionEl.dataset.id) {
+        deleteTask(actionEl.dataset.id);
+      } else {
+        const id = el.taskId.value;
+        if (id) deleteTask(id);
+        closeEditor();
+      }
+      break;
+    case "toggle-completed":
+      state.completedCollapsed = !state.completedCollapsed;
+      saveState();
+      render();
+      break;
+    case "type":
+      setType(actionEl.dataset.value);
+      syncEditorState();
+      break;
+    case "history":
+      openHistory();
+      break;
+    case "history-back":
+      closeHistory();
+      break;
+    default:
+      break;
+  }
+}
+
+function handleChange(e) {
+  const target = e.target;
+  if (target.matches("input[data-action='toggle']")) {
+    const id = target.dataset.id;
+    const task = state.tasks.find((t) => t.id === id);
+    if (!task) return;
+    task.completed = target.checked;
+    saveState();
+    render();
+    return;
+  }
+
+  if (target === el.hasCheckInput || target === el.priorityInput) {
+    syncEditorState();
+  }
+}
+
+function getPointY(e) {
+  if (e.touches && e.touches[0]) return e.touches[0].clientY;
+  if (e.changedTouches && e.changedTouches[0]) return e.changedTouches[0].clientY;
+  return e.clientY;
+}
+
+const dragState = {
+  active: false,
+  startY: 0,
+  delta: 0,
 };
 
-el.sheetClose.addEventListener("click", closeHandler);
-el.sheetClose.addEventListener("touchend", closeHandler, { passive: false });
-el.sheetBackdrop.addEventListener("click", closeHandler);
+function startDrag(e) {
+  if (!e.target.closest("[data-swipe='handle']")) return;
+  dragState.active = true;
+  dragState.startY = getPointY(e);
+  dragState.delta = 0;
+  el.editorPanel.classList.add("dragging");
+}
 
-el.typeSegment.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-  setType(btn.dataset.value);
-  syncFormState();
-});
+function moveDrag(e) {
+  if (!dragState.active) return;
+  const y = getPointY(e);
+  dragState.delta = Math.max(0, y - dragState.startY);
+  el.editorPanel.style.transform = `translateY(${dragState.delta}px)`;
+  if (dragState.delta > 0 && e.cancelable) e.preventDefault();
+}
 
-el.hasCheckInput.addEventListener("change", syncFormState);
-el.priorityInput.addEventListener("change", syncFormState);
-
-el.taskForm.addEventListener("submit", submitForm);
-
-el.deleteBtn.addEventListener("click", () => {
-  const id = el.taskId.value;
-  if (id) deleteTask(id);
-  closeSheet();
-});
-
-el.stats.addEventListener("click", openHistory);
-el.historyBack.addEventListener("click", closeHistory);
+function endDrag() {
+  if (!dragState.active) return;
+  const shouldClose = dragState.delta > 80;
+  dragState.active = false;
+  el.editorPanel.classList.remove("dragging");
+  if (shouldClose) {
+    closeEditor();
+  } else {
+    el.editorPanel.style.transform = "";
+  }
+}
 
 handleDayChange();
 render();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
+}
+
+document.addEventListener("click", handleClick);
+document.addEventListener("change", handleChange);
+
+el.editorPanel.addEventListener("submit", submitForm);
+
+if (window.PointerEvent) {
+  el.editor.addEventListener("pointerdown", startDrag);
+  el.editor.addEventListener("pointermove", moveDrag);
+  el.editor.addEventListener("pointerup", endDrag);
+  el.editor.addEventListener("pointercancel", endDrag);
+} else {
+  el.editor.addEventListener("touchstart", startDrag, { passive: true });
+  el.editor.addEventListener("touchmove", moveDrag, { passive: false });
+  el.editor.addEventListener("touchend", endDrag);
+  el.editor.addEventListener("touchcancel", endDrag);
 }
 
 window.addEventListener("resize", () => {
